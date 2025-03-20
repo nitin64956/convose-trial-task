@@ -4,13 +4,11 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
   FlatList,
   StyleSheet,
   Animated
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import {SafeAreaView, SafeAreaProvider} from 'react-native-safe-area-context';
 
 const SearchButtonInput = () => {
   const [isSearchActive, setIsSearchActive] = useState(false);
@@ -18,6 +16,7 @@ const SearchButtonInput = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState([]);
   const [filteredResults, setFilteredResults] = useState([]);
+  const [defaultResults,setDefaultResults] = useState([]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
@@ -27,7 +26,6 @@ const SearchButtonInput = () => {
 
   useEffect(() => {
     fetchData("");
-
   },[]);
 
   // API call function
@@ -49,6 +47,9 @@ const SearchButtonInput = () => {
       const autocomplete = data.autocomplete;
       setResults(autocomplete);
       setFilteredResults(autocomplete);
+      if (!query) {
+        setDefaultResults(autocomplete);
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -72,7 +73,6 @@ const SearchButtonInput = () => {
   const handleSearchChange = (text) => {
     setSearchQuery(text);
     setIsTyping(true);
-    console.log("handlesearch",results);
     
     // Filter existing results immediately while waiting for API
     if (results.length > 0) {
@@ -109,7 +109,6 @@ const SearchButtonInput = () => {
         {item.avatar ? <img style={styles.interestIcon} src={item.avatar}/> : <Ionicons name="bookmark-outline" size={24} color="#888" />}
       </View>
       <Text style={styles.resultText}>{item.name}</Text>
-      {/* {item.isAdded && <Text style={styles.addedText}>(Already added)</Text>} */}
     </TouchableOpacity>
   );
   
@@ -117,9 +116,10 @@ const SearchButtonInput = () => {
     <View style={styles.container}>
       
         {isSearchActive && searchQuery.length == 0 && (
-        <View style={{ height:'50%' }}>
+        <View style={{ height:'50%',marginBottom:10 }}>
         <FlatList
-        data={results}
+        inverted={true}
+        data={defaultResults}
         renderItem={({ item }) => <ResultItem item={item} />}
         keyExtractor={(item) => item.id.toString()}
         style={styles.resultsList}
@@ -132,9 +132,10 @@ const SearchButtonInput = () => {
       )}
       
       {isSearchActive && searchQuery.length > 0 && (
-        <View style={styles.resultsContainer}>
+        <View style={{ height:'50%',marginBottom:10 }}>
           {isLoading && !isTyping ? (
             // Show skeleton loader when loading new results
+           
             <FlatList
               data={[1, 2, 3, 4, 5]}
               renderItem={() => <SkeletonItem />}
@@ -144,6 +145,7 @@ const SearchButtonInput = () => {
           ) : (
             // Showing filtered results
             <FlatList
+              inverted={true}
               data={filteredResults}
               renderItem={({ item }) => <ResultItem item={item} />}
               keyExtractor={(item) => item.id.toString()}
@@ -156,6 +158,7 @@ const SearchButtonInput = () => {
         </View>
       )}
 
+      {/* Search Btn and Input field */}
       {!isSearchActive ? (
         <TouchableOpacity 
           style={styles.searchButton}
@@ -167,9 +170,6 @@ const SearchButtonInput = () => {
       ) : (
         <View style={styles.searchBarContainer}>
           <Animated.View style={[styles.searchBar]}>
-          <SafeAreaProvider>
-          <SafeAreaView>
-            {/* <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} /> */}
             <TextInput
               ref={inputRef}
               style={[styles.input, isInputFocused && styles.inputFocused]}
@@ -186,15 +186,9 @@ const SearchButtonInput = () => {
                 setSearchQuery("");
                 setFilteredResults([]);}}
             />
-              </SafeAreaView>
-             </SafeAreaProvider>
-           
-           
           </Animated.View>
         </View>
-      )}
-
-     
+      )}     
     </View>
   );
 };
@@ -233,11 +227,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent:'space-between',
     backgroundColor: '#f0f0f0',
-    borderRadius: 20,
-    padding: 8,
+    padding: 2,
+    marginTop:10,
     position:'fixed',
-    borderRadius:20,
-    width:'100%'
+    marginLeft:'5%',
+    width:'90%'
   },
   searchIcon: {
     marginLeft: 5,
@@ -248,38 +242,18 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    // marginLeft: 5,
     fontSize: 14,
     color: '#333',
     margin:'auto',
-    width: '100%',
+    width: '80%',
   },
 
   inputFocused: {
     borderWidth: 0,
     outlineStyle:'none',
-    width: '100%',
+    width: '80%',
   },
 
-  closeButton: {
-    padding: 2,
-  },
-  resultsContainer: {
-    position: 'absolute',
-    top: 60,
-    left: 10,
-    right: 10,
-    backgroundColor: 'white',
-    width:400,
-    borderRadius: 10,
-    elevation: 5,
-    shadowColor: 'black',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    maxHeight: 300,
-    zIndex: 10,
-  },
   resultsList: {
     padding: 5
   },
